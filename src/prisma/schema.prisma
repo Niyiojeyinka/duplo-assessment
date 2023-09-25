@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Author {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(255)
+  email    String   @unique
+  password String?
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  posts    Post[]
+  
+  @@map("authors")
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  title     String    @db.VarChar(255)
+  content   String
+  authorId  Int
+  status PostStatus   @default(PUBLISHED)
+  publishedAt DateTime?
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  author    Author      @relation(fields: [authorId], references: [id])
+
+  @@index([status], type: Hash)
+  @@index([authorId], type: Hash)
+  @@map("posts")
+}
+
+enum PostStatus {
+  PUBLISHED
+  DRAFT
+  DELETED
+}
