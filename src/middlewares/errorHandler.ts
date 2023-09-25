@@ -4,7 +4,7 @@ import logger from '../configs/logger';
 import { errorResponse, STATUS } from '../utils';
 
 
-const errorHandler = (
+export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
@@ -30,4 +30,24 @@ const errorHandler = (
   return errorResponse(res, STATUS.INTERNAL_SERVER_ERROR, {}, 'Internal server error')
 };
 
-export default errorHandler;
+export const prismaErrorHandler = (error: any, entity: string) => {
+  // ideally error will be mapped to a more readable error message also this will help with internationalization
+  
+  if (error.code === 'P2002') {
+    return {
+      error: `${entity} already exists`
+    }
+  }
+
+  if (error.code === 'P2025') {
+    return {
+      error: `${entity} not found`
+    }
+  }
+  
+  logger.error(error.message);
+
+  return {
+    error: 'Error creating post'
+  }
+}

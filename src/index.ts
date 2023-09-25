@@ -1,6 +1,6 @@
 import logger from './configs/logger';
 import express, { Request, Response } from "express";
-import errorHandler from './middlewares/errorHandler';
+import { errorHandler } from './middlewares/errorHandler';
 import rootRouter from './routes';
 import prisma from './configs/database';
 import redis from './configs/redis';

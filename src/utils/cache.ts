@@ -14,6 +14,7 @@ const getCache = async (key: string) => {
   try {
   const cacheKey = buildCacheKey(key);
   const data = await redis.get(cacheKey);
+  
   return JSON.parse(data as string);
   } catch (e) {
     return null;
