@@ -7,7 +7,6 @@ import { prismaErrorHandler } from "../middlewares/errorHandler";
 const ENTITY_NAME = 'Post';
 export const createPost = async (data: IPost ) : Promise<IErrorResponse | Post > => {
   const { title, content, author } = data;
-  console.log('check here', data)
   const post = await prisma.post.create({
     data: {
       title,

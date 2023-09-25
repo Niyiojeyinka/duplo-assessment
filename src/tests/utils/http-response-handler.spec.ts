@@ -3,19 +3,19 @@ import { successResponse, errorResponse } from "../../utils";
 describe("httpResponseHandler", () => {
   const res: any = {
     status: jest.fn(() => res),
-    json: jest.fn(),
+    send: jest.fn(),
   };
 
   beforeEach(() => {
     res.status.mockClear();
-    res.json.mockClear();
+    res.send.mockClear();
   });
 
   it("should return a success response", () => {
     successResponse(res as any, 200, { data: "some data" }, "success message");
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
+    expect(res.send).toHaveBeenCalledWith({
       success: true,
       message: "success message",
       data: { data: "some data" },
@@ -27,17 +27,13 @@ describe("httpResponseHandler", () => {
     errorResponse(res as any, 400, {}, errorMessage);
     
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledTimes(1)
-    expect(res.json).toHaveBeenCalledWith({
+    expect(res.send).toHaveBeenCalledTimes(1)
+    expect(res.send).toHaveBeenCalledWith({
       "success": false,
       "message": errorMessage,
       "errors": [
         {
-          "type": "client",
-          "value": null,
-          "msg": errorMessage,
-          "path": null,
-          "location": null
+          message: errorMessage
         }
       ]
   })

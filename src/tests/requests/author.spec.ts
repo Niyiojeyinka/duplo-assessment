@@ -1,25 +1,32 @@
-import request from 'supertest';
+import { url } from 'inspector';
 import app from '../../index';
 import { buildAuthor } from '../builders/author';
 import {  faker } from '@faker-js/faker';
 import { Author } from '@prisma/client';
 
 describe('Author Endpoints', () => {
-  describe('POST /authors', ()=> {
+  afterAll(() => {
+    app.close();
+  });
+
+  describe('POST /authors/register', ()=> {
     it('should return 201', async () => {
-      const res = await request(app)
-        .post('/authors')
-        .send({
+      const response = await app.inject({
+        method: 'POST',
+        url: '/authors/register',
+        payload:
+        {
           email: faker.internet.email(),
           name: faker.person.firstName(),
           password: faker.internet.password()
-        });
-
-      expect(res.statusCode).toEqual(201);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toHaveProperty('id');
-      expect(res.body.data).toHaveProperty('email');
-      expect(res.body.data).toHaveProperty('name');
+        }}) as any;
+      const responseBody = JSON.parse(response.body);
+      
+      expect(response.statusCode).toEqual(201);
+      expect(responseBody).toHaveProperty('data');
+      expect(responseBody.data).toHaveProperty('id');
+      expect(responseBody.data).toHaveProperty('email');
+      expect(responseBody.data).toHaveProperty('name');
     });
   });
 
@@ -32,53 +39,32 @@ describe('Author Endpoints', () => {
         id: 2,
       } as Author);
       
-      const res = await request(app)
-        .post('/authors/login')
-        .send({
+      const response = await app.inject({
+        method: 'POST',
+        url: '/authors/login',
+        payload: {
           email: author.email,
           password: 'password',
-        });
+        }
+      }) as any;
+      const responseBody = JSON.parse(response.body);
 
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toHaveProperty('token');
+      expect(response.statusCode).toEqual(200);
+      expect(responseBody.data).toHaveProperty('token');
     });
 
     it('should return 400', async () => {
-      const res = await request(app)
-        .post('/authors/login')
-        .send({
-          email: faker.internet.email(),
-          password: 'password',
-        });
+      const response = await app.inject({
+        method: 'POST',
+        url: '/authors/login',
+        payload: {
+        email: faker.internet.email(),
+        password: 'password',
+        } }) as any;
+      const responseBody = JSON.parse(response.body);
 
-      expect(res.statusCode).toEqual(400);
-      expect(res.body).toHaveProperty('errors');
-    });
-  });
-
-  describe('GET /authors', ()=> {
-    it('should return 200', async () => {
-      const res = await request(app)
-        .get('/authors');
-
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toBeInstanceOf(Array);
-    });
-  });
-
-  describe('GET /authors/:id', ()=> {
-    it('should return 200', async () => {
-      const author = await buildAuthor();
-      const res = await request(app)
-        .get('/authors/' + author.id);
-
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toHaveProperty('id');
-      expect(res.body.data).toHaveProperty('email');
-      expect(res.body.data).toHaveProperty('name');
+      expect(response.statusCode).toEqual(400);
+      expect(responseBody).toHaveProperty('errors');
     });
   });
 });

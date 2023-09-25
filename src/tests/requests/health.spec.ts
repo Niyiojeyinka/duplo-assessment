@@ -1,4 +1,3 @@
-import request from 'supertest';
 import app from '../../index';
 
 jest.mock('../../configs/redis', () => ({
@@ -12,11 +11,18 @@ jest.mock('../../configs/redis', () => ({
   },
 }));
 
+
 describe('Health Check', () => {
+    afterAll(() => {
+    app.close();
+  });
+
   it('should returns 200', async () => {
-    const res = await request(app)
-      .get('/health')
-      .send({});
-    expect(res.statusCode).toEqual(200);
+    const response = await app.inject({
+      method: 'GET',
+      url: '/health',
+    });
+    
+    expect(response.statusCode).toEqual(200);
   });
 });

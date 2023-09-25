@@ -18,5 +18,7 @@ Develop a Blog RESTful API using Node.js, Express, TypeScript, and PostgreSQL/Pr
 
 ** To run the integrations and units test **:
 
--  Copy the contents of `.env.example` as it is to `.env.test` 
-- update the database name with the database you want to use for testing, in case of docker `test_db` then run `npm run migrate:test` afterward, run `npm run test` to run successfully both unit and integration tests
+-  run `npm run test` 
+
+** To run the integrations and units test via docker **:
+-  enter the containers bash and run `npm run test` 

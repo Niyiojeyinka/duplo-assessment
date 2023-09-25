@@ -1,4 +1,3 @@
-import request from 'supertest';
 import app from '../../index';
 import { buildAuth } from '../builders/author';
 import { buildPost } from '../builders/post';
@@ -7,65 +6,89 @@ describe('Posts Endpoints', () => {
   describe('POST /posts', ()=> {
     it('should return 201', async () => {
       const { token } = await buildAuth();
-      const res = await request(app)
-        .post('/posts')
-        .send({
+      const response = await app.inject({
+        method: 'POST',
+        url: '/posts',
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+
+        payload:
+        {
           title: 'test',
           content: 'test',
-        }).set('Authorization', 'Bearer ' + token);
+        }
+      }) as any;
+      const responseBody = JSON.parse(response.body);
 
-      expect(res.statusCode).toEqual(201);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toHaveProperty('id');
-      expect(res.body.data).toHaveProperty('title');
-      expect(res.body.data).toHaveProperty('content');
+      expect(response.statusCode).toEqual(201);
+      expect(responseBody).toHaveProperty('data');
+      expect(responseBody.data).toHaveProperty('id');
+      expect(responseBody.data).toHaveProperty('title');
+      expect(responseBody.data).toHaveProperty('content');
     });
 
     it('should return 400', async () => {
       const { token } = await buildAuth();
-      const res = await request(app)
-        .post('/posts')
-        .send({
+      const response = await app.inject({
+        method: 'POST',
+        url: '/posts',
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+        payload:
+        {
           title: 'test',
-        }).set('Authorization', 'Bearer ' + token);
+        }
+      }) as any;
+      const responseBody = JSON.parse(response.body);
 
-      expect(res.statusCode).toEqual(400);
-      expect(res.body.success).toBeFalsy();
-      expect(res.body).toHaveProperty('errors');
+      expect(response.statusCode).toEqual(400);
+      expect(responseBody.success).toBeFalsy();
+      expect(responseBody).toHaveProperty('errors');
     });
   });
 
   describe('GET /posts', ()=> {
     it('should return 200', async () => {
-      const res = await request(app)
-        .get('/posts');
-
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toBeInstanceOf(Object);
+      const response = await app.inject({
+        method: 'GET',
+        url: '/posts',
+      }) as any;
+      const responseBody = JSON.parse(response.body);
+      
+      expect(response.statusCode).toEqual(200);
+      expect(responseBody).toHaveProperty('data');
+      expect(responseBody.data).toBeInstanceOf(Object);
     });
   });
 
   describe('GET /posts/:id', ()=> {
     it('should return 200', async () => {
       const post = await buildPost();
-      const res = await request(app)
-        .get('/posts/' + post.id);
-
-      expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty('data');
-      expect(res.body.data).toHaveProperty('id');
-      expect(res.body.data).toHaveProperty('title');
-      expect(res.body.data).toHaveProperty('content');
+      const response = await app.inject({
+        method: 'GET',
+        url: `/posts/${post.id}`,
+      }) as any;
+      const responseBody = JSON.parse(response.body);
+      
+      expect(response.statusCode).toEqual(200);
+      expect(responseBody).toHaveProperty('data');
+      expect(responseBody.data).toHaveProperty('id');
+      expect(responseBody.data).toHaveProperty('title');
+      expect(responseBody.data).toHaveProperty('content');
     });
 
     it('should return 404', async () => {
-      const res = await request(app)
-        .get('/posts/999');
+      const response = await app.inject({
+        method: 'GET',
+        url: '/posts/100',
+      }) as any;
+      const responseBody = JSON.parse(response.body);
 
-      expect(res.statusCode).toEqual(404);
-      expect(res.body.success).toBeFalsy();
-      expect(res.body).toHaveProperty('errors');
+      expect(response.statusCode).toEqual(404);
+      expect(responseBody.success).toBeFalsy();
+      expect(responseBody).toHaveProperty('errors');
     });
   });
 });

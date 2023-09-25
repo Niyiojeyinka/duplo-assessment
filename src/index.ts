@@ -7,7 +7,7 @@ import redis from './configs/redis';
 import authorRouter from './routes/author-router';
 import postRouter from './routes/post-router';
 
-let app: FastifyInstance = fastify({ logger: true });
+let app: FastifyInstance = fastify({ logger: false });
 
 app.get('/health', (req: Request, res: Response) => {
    res.send({ status: 'ok' });

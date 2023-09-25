@@ -74,7 +74,7 @@ const getPosts = async (req: Request, res: Response) => {
       throw new AppError(data.error, STATUS.BAD_REQUEST);
     }
 
-    await setCache(cachekey, data);
+    await setCache(cachekey, data, 2); // 2 hours
 
     return successResponse(res, STATUS.OK, data);
   } catch (error: any) {
