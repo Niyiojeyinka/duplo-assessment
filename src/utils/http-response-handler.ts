@@ -1,7 +1,7 @@
-import { Response } from "express";
+import type { FastifyReply as Response } from "fastify";
 
 export const successResponse = (res: Response, status: number, data: object, message  : string  = "") => {
-  return res.status(status).json({
+  return res.status(status).send({
     success: true,
     message,
     data
@@ -11,16 +11,11 @@ export const successResponse = (res: Response, status: number, data: object, mes
 export const errorResponse = (res: Response, status: number, data: any, message  : string  = "") => {
   let errors: [] = data?.errors
 
-
-  return res.status(status).json({
+  return res.status(status).send({
     success: false,
     message,
     errors: errors || [{
-      type: status > 500 ? "system" : "client",
-      value: null,
-      "msg": message,
-      path: null,
-      location: null
+      message,
     }]
-})
+  });
 }

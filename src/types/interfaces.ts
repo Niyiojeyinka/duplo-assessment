@@ -1,3 +1,4 @@
+
 import { Author } from "@prisma/client";
 
 export interface ICreateAuthor {
@@ -18,6 +19,7 @@ export interface IAuthor {
   id: number;
   email: string;
   name: string;
+  password?: string;
 }
 
   export interface IErrorResponse {
@@ -52,4 +54,10 @@ export interface PaginationResult<T> {
   totalPages: number;
   currentPage: number;
   nextPage: number | null;
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    author?: Author;
+  }
 }

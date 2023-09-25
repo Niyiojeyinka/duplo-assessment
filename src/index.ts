@@ -1,32 +1,21 @@
 import logger from './configs/logger';
-import express, { Request, Response } from "express";
+import fastify from 'fastify';
+import type { FastifyInstance, FastifyReply as Response, FastifyRequest as Request } from "fastify";
 import { errorHandler } from './middlewares/errorHandler';
-import rootRouter from './routes';
 import prisma from './configs/database';
 import redis from './configs/redis';
-import bodyPayloadValidator from './middlewares/bodyPayloadValidator';
+import authorRouter from './routes/author-router';
+import postRouter from './routes/post-router';
 
-const app = express();
+let app: FastifyInstance = fastify({ logger: true });
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json({
-   inflate: true,
-   strict: true,
-   verify: bodyPayloadValidator}
-));
 app.get('/health', (req: Request, res: Response) => {
-   res.status(200).json('OK');
+   res.send({ status: 'ok' });
 });
-app.use('/', rootRouter);
-app.use(errorHandler);
-process.on('unhandledRejection', (err) => {
-   logger.error(err);
-   process.exit(1);
-});
-process.on('uncaughtException', (err) => {
-   logger.error(err);
-   process.exit(1);
-});
+app.register(authorRouter, { prefix: '/authors' });
+app.register(postRouter, { prefix: '/posts' });
+app.setErrorHandler(errorHandler);
+
 process.on('SIGINT', async () => {
    await prisma.$disconnect();
    process.exit(0);

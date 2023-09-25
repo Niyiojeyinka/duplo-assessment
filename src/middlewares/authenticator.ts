@@ -1,14 +1,14 @@
-import { NextFunction, Request, Response } from "express";
-import { STATUS, errorResponse, verifyToken } from "../utils";
+import { FastifyRequest as Request, FastifyReply as Response } from 'fastify';
 import prisma from "../configs/database";
 import { IJwtPayload } from "../types/interfaces";
 import { Author } from "@prisma/client";
+import { STATUS as status, errorResponse as errResponse, verifyToken } from "../utils";
 
-export default async (req: Request, res: Response, next: NextFunction) => {
+const authenticator = async (request: Request, reply: Response) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = request.headers.authorization?.split(" ")[1];
     if (!token) {
-      throw "Invalid Token";
+      throw new Error("Invalid Token");
     }
 
     const payload: IJwtPayload = verifyToken(token);
@@ -17,13 +17,15 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         id: payload.authorId
       }
     }) as Author;
+
     if (!author) {
-      throw "Invalid Token";
+      throw new Error("Invalid Token");
     }
 
-    req.body.author = author;
-    next();
-  }catch{
-    return errorResponse(res, STATUS.UNAUTHORIZED, {}, "Unauthorized");
+    request.author = author;
+  } catch (error) {
+    return errResponse(reply, status.UNAUTHORIZED, {}, "Unauthorized");
   }
-}
+};
+
+export default authenticator;
