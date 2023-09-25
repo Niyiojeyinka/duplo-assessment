@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+RUN mv .env.example .env
+
 RUN npm run generate
 
 EXPOSE 9000
