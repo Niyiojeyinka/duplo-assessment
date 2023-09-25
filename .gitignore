@@ -1,0 +1,7 @@
+node_modules
+logs/*.log
+.env
+.env.test
+dist/*
+!dist/.gitkeep
+coverage
