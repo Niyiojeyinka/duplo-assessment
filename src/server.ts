@@ -4,12 +4,9 @@ import environmentConfig from './configs/environment';
 
 const { PORT } = environmentConfig;
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on http://localhost:${PORT}`);
-});
-
 app.listen({
-  port: PORT
+  port: PORT,
+  host: '0.0.0.0'
 }
 );
 
