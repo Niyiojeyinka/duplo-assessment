@@ -25,8 +25,10 @@ export const prismaErrorHandler = (error: any, entity: string) => {
   }
 }
 
-export const errorHandler = (error: Error, request: Request, reply: Response) => {
-  logger.error(error);
+export const errorHandler = (error: any, request: Request, reply: Response) => {
+  if (error?.code === 'FST_ERR_VALIDATION') {
+    return errorResponse(reply, STATUS.BAD_REQUEST, {}, error.message);
+  }
 
   if (error instanceof AppError) {
     return errorResponse(reply, error.statusCode, {}, error.message);
@@ -41,6 +43,7 @@ export const errorHandler = (error: Error, request: Request, reply: Response) =>
       return errorResponse(reply, STATUS.BAD_REQUEST, {}, 'Invalid JSON, please check your request body');
     
     default:
+      logger.error(error.message);
       return errorResponse(reply, STATUS.INTERNAL_SERVER_ERROR, {}, 'Internal server error');
   }
 }

@@ -1,14 +1,15 @@
 import { authorController } from '../controllers';
 import { FastifyInstance, FastifyPluginCallback } from 'fastify';
+import { registerValidationSchema, loginValidationSchema } from '../middlewares/validations/author';
 
 const {
   register,
   login
 } = authorController;
-console.log('authorRouter');
+
 const authorRouter: FastifyPluginCallback = (app: FastifyInstance, opts, done) => {
-  app.post('/register', register);
-  app.post('/login', login);
+  app.post('/register', { schema: registerValidationSchema }, register);
+  app.post('/login', { schema: loginValidationSchema }, login);
   done();
 }
 

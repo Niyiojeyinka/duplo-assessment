@@ -1,17 +1,24 @@
-import { body, param } from 'express-validator';
+export const registerValidationSchema = {
+  body: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', format: 'email', errorMessage: { type: 'Not a valid email', required: 'Email is required' } },
+      password: { type: 'string', minLength: 5, errorMessage: { type: 'Password should be at least 5 chars', required: 'Password is required' } },
+      name: { type: 'string', errorMessage: { type: 'Name should be a string', required: 'Name is required' } }
+    },
+    required: ['email', 'password', 'name'],
+    additionalProperties: false
+  }
+};
 
-export default {
-  idValidation: [
-    param('id').isNumeric().withMessage('Id should be a number').notEmpty().withMessage('Id is required'),
-  ],
-  registerValidation: [
-    body('email').isEmail().withMessage('Not a valid email').notEmpty().withMessage('Email is required').normalizeEmail(),
-    body('password').isLength({ min: 5 }).withMessage('Password should be at least 5 chars').notEmpty().withMessage('Password is required'),
-    body('name').isString().withMessage('Name should be a string').notEmpty().withMessage('Name is required'),
-  ],
-
-  loginValidation: [
-    body('email').isEmail().withMessage('Not a valid email').notEmpty().withMessage('Email is required').normalizeEmail(),
-    body('password').isLength({ min: 5 }).withMessage('Password should be at least 5 chars').notEmpty().withMessage('Password is required')
-  ]
-}
+export const loginValidationSchema = {
+  body: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', format: 'email', errorMessage: { type: 'Not a valid email', required: 'Email is required' } },
+      password: { type: 'string', minLength: 5, errorMessage: { type: 'Password should be at least 5 chars', required: 'Password is required' } }
+    },
+    required: ['email', 'password'],
+    additionalProperties: false
+  }
+};
