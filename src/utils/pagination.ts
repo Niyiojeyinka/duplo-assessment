@@ -1,4 +1,4 @@
-import { PaginationArgs, PaginationResult } from '../types/interfaces';
+import { IPaginationArgs, IPaginationResult } from '../types/interfaces';
 
 export const paginate = async <T>({
     skip = 0,
@@ -9,16 +9,16 @@ export const paginate = async <T>({
     skip?: number,
     take?: number,
     count: () => Promise<number>,
-    findMany: (args: PaginationArgs) => Promise<T[]>
-}): Promise<PaginationResult<T>> => {
+    findMany: (args: IPaginationArgs) => Promise<T[]>
+}): Promise<IPaginationResult<T>> => {
     const total = await count();
-    const data = await findMany({ skip, take });
+    const items = await findMany({ skip, take });
     const totalPages = Math.ceil(+total / take);
     const currentPage = (skip / take) + 1;
     const nextPage = currentPage < totalPages ? currentPage + 1 : null;
 
     return {
-        data,
+        items,
         total,
         totalPages,
         currentPage,

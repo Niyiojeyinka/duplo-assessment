@@ -3,7 +3,7 @@ import logger from './configs/logger';
 import fastify from 'fastify';
 import ajvErrors from 'ajv-errors';
 import type { FastifyInstance, FastifyReply as Response, FastifyRequest as Request } from "fastify";
-import { errorHandler } from './middlewares/errorHandler';
+import { errorHandler } from './utils/error-handler';
 import prisma from './configs/database';
 import redis from './configs/redis';
 import authorRouter from './routes/author-router';

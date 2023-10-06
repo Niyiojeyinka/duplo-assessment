@@ -16,12 +16,13 @@ describe("authorService", () => {
     it("should register a author", async () => {
       prismaMock.author.findUnique.mockResolvedValue(null);
       prismaMock.author.create.mockResolvedValue(data as Author);
-      const author = await register(data);
+      const result = await register(data);
 
-      expect(author).toBeDefined();
-      expect(author).toHaveProperty("id");
-      expect(author).toHaveProperty("email", data.email);
-      expect(author).toHaveProperty("name", data.name);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveProperty("id");
+      expect(result.data).toHaveProperty("email", data.email);
+      expect(result.data).toHaveProperty("name", data.name);
     });
   });
 
@@ -38,8 +39,8 @@ describe("authorService", () => {
       sinon.restore();
 
       expect(response).toBeDefined();
-      expect(response).toHaveProperty("author");
-      expect(response).toHaveProperty("token");
+      expect(response).toHaveProperty("data");
+      expect(response.data).toHaveProperty("token");
     });  
 
     it("should return an error if author does not exist", async () => {

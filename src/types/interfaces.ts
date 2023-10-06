@@ -22,10 +22,6 @@ export interface IAuthor {
   password?: string;
 }
 
-  export interface IErrorResponse {
-  error: string;
-}
-
 export interface IJwtPayload {
   authorId: number;
 }
@@ -43,13 +39,13 @@ export interface IPaginationData {
   nextPage: number | null;
 }
 
-export interface PaginationArgs {
+export interface IPaginationArgs {
   skip?: number;
   take?: number;
 }
 
-export interface PaginationResult<T> {
-  data: T[];
+export interface IPaginationResult<T> {
+  items: T[];
   total: number;
   totalPages: number;
   currentPage: number;
@@ -60,4 +56,10 @@ declare module 'fastify' {
   interface FastifyRequest {
     author?: Author;
   }
+}
+
+export interface IResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }

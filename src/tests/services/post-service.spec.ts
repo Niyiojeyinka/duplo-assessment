@@ -4,7 +4,7 @@ import { createPost, getPost, getPosts,
   updatePost, deletePost } from "../../services/post-service";
 import { Post } from "@prisma/client";
 import { buildAuthor } from "../builders/author";
-import { IErrorResponse } from "../../types/interfaces";
+import { IPost, IResult } from "../../types/interfaces";
 
 
 describe("postService",  () => {
@@ -22,25 +22,27 @@ describe("postService",  () => {
   describe("createPost", () => {
     it("should create a post", async () => {
       prismaMock.post.create.mockResolvedValue(data as Post);
-      const post = await createPost(data);
+      const result = await createPost(data);
 
-      expect(post).toBeDefined();
-      expect(post).toHaveProperty("id");
-      expect(post).toHaveProperty("title", data.title);
-      expect(post).toHaveProperty("content", data.content);
-      expect(post).toHaveProperty("authorId", data.authorId);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveProperty("id");
+      expect(result.data).toHaveProperty("title", data.title);
+      expect(result.data).toHaveProperty("content", data.content);
     });
   });
 
   describe("getPost", () => {
     it("should get a post", async () => {
       prismaMock.post.findUnique.mockResolvedValue(data as Post);
-      const post = await getPost(data.id);
+      const result = await getPost(data.id);
 
-      expect(post).toBeDefined();
-      expect(post).toHaveProperty("id");
-      expect(post).toHaveProperty("title", data.title);
-      expect(post).toHaveProperty("content", data.content);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveProperty("id");
+      expect(result.data).toHaveProperty("title", data.title);
+      expect(result.data).toHaveProperty("content", data.content);
+
     });
   });
 
@@ -48,14 +50,15 @@ describe("postService",  () => {
     it("should get posts", async () => {
       prismaMock.post.findMany.mockResolvedValue([data] as Post[]);
       prismaMock.post.count.mockResolvedValue(1);
-      const posts = await getPosts({ skip: 0, take: 10 });
+      const result = await getPosts({ skip: 0, take: 10 });
 
-      expect(posts).toBeDefined();
-      expect(posts).toHaveProperty("data");
-      expect(posts).toHaveProperty("total");
-      expect(posts).toHaveProperty("totalPages");
-      expect(posts).toHaveProperty("currentPage");
-      expect(posts).toHaveProperty("nextPage");
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("data");
+      expect(result['data']).toHaveProperty("items");
+      expect(result['data']).toHaveProperty("total");
+      expect(result['data']).toHaveProperty("totalPages");
+      expect(result['data']).toHaveProperty("currentPage");
+      expect(result['data']).toHaveProperty("nextPage");
     });
   });
 
@@ -65,13 +68,15 @@ describe("postService",  () => {
         title: faker.lorem.words(3),
         content: faker.lorem.paragraph(),
       };
+      prismaMock.post.findUnique.mockResolvedValue(data as Post);
       prismaMock.post.update.mockResolvedValue({ ...data, ...updatedData } as Post);
-      const post = await updatePost(data.id, updatedData);
+      const result = await updatePost(data.id, updatedData);
 
-      expect(post).toBeDefined();
-      expect(post).toHaveProperty("id");
-      expect(post).toHaveProperty("title", updatedData.title);
-      expect(post).toHaveProperty("content", updatedData.content);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveProperty("id");
+      expect(result.data).toHaveProperty("title", updatedData.title);
+      expect(result.data).toHaveProperty("content", updatedData.content);    
     });
 
     it("should not update a post if author is not the owner", async () => {
@@ -81,6 +86,7 @@ describe("postService",  () => {
       };
       const author = await buildAuthor();
       
+      prismaMock.post.findUnique.mockResolvedValue(data as Post);
       prismaMock.post.update.mockResolvedValue({
         ...data, authorId: 100,
       } as Post);
@@ -88,7 +94,7 @@ describe("postService",  () => {
         content: updatedData.content,
         title: updatedData.title,
         author
-      }) as IErrorResponse;
+      }) as IResult<IPost>;
 
       expect(response).toHaveProperty("error");
       expect(response.error).toBe("Not authorized");
@@ -100,7 +106,7 @@ describe("postService",  () => {
         content: faker.lorem.paragraph(),
       };
       prismaMock.post.update.mockRejectedValue({ code: 'P2025'});
-      const response = await updatePost(500, updatedData) as IErrorResponse;
+      const response = await updatePost(500, updatedData) as IResult<IPost>;
 
       expect(response).toHaveProperty("error");
       expect(response.error).toBe("Post not found");
@@ -113,7 +119,9 @@ describe("postService",  () => {
       prismaMock.post.delete.mockResolvedValue(data as Post);
       const response = await deletePost(data.id, author);
 
-      expect(response).toBe("Post deleted");
+      expect(response).toBeDefined();
+      expect(response).toHaveProperty("data");
+      expect(response.data).toHaveProperty("message", "Post deleted successfully");
     });
 
     it("should not delete a post if post is not found", async () => {

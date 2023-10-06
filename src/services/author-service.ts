@@ -1,22 +1,19 @@
 import prisma from "../configs/database";
-import { generateToken, isError } from "../utils";
+import { generateToken } from "../utils";
 import { checkPassword, hashPassword } from "../utils/bcrypt";
-import { IErrorResponse, ILoginResponse, ICreateAuthor, IAuthor  } from "../types/interfaces";
+import { ILoginResponse, ICreateAuthor, IAuthor, IResult  } from "../types/interfaces";
 
-export const register = async (data: ICreateAuthor ) : Promise<IErrorResponse | IAuthor > => {
+export const register = async (data: ICreateAuthor ) : Promise<IResult<IAuthor>> => {
   const { email, password, name } = data;
   let author = await prisma.author.findUnique({ where: { email } });
   if (author) {
     return {
+      success: false,
       error: 'Author already exists'
     }
   }
 
   const hashedPassword = await hashPassword(password as string);
-  if (isError(hashedPassword)){
-    return hashedPassword;
-  } 
-  
   author = await prisma.author.create({
     data: {
       email: email.toLocaleLowerCase(),
@@ -26,18 +23,22 @@ export const register = async (data: ICreateAuthor ) : Promise<IErrorResponse | 
   });
 
   return {
-    id: author.id,
-    email: author.email.toLocaleLowerCase(),
-    name: author.name
-  };
+    success: true,
+    data: {
+      id: author.id,
+      email: author.email,
+      name: author.name
+    }
+  }
 }
 
-export const login = async (email: string, password:string) : Promise<IErrorResponse | ILoginResponse> => {
+export const login = async (email: string, password:string) : Promise<IResult<ILoginResponse>> => {
   const errorMessage: string = 'Invalid credentials';
   email = email.toLocaleLowerCase();
   const author = await prisma.author.findUnique({ where: { email } });
   if (!author) {
     return {
+      success: false,
       error: errorMessage
     }
   }
@@ -45,17 +46,21 @@ export const login = async (email: string, password:string) : Promise<IErrorResp
   const isMatch = await checkPassword(password, author.password as string);
   if (!isMatch) {
     return {
+      success: false,
       error: errorMessage
     }
   }
 
   const token = generateToken({ authorId: author.id });
   return {
-    author: {
-      id: author.id,
-      email: author.email,
-      name: author.name
-    },
-    token
+    success: true,
+    data: {
+      author: {
+        id: author.id,
+        email: author.email,
+        name: author.name
+      },
+      token
+    }
   }
 }

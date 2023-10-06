@@ -1,11 +1,11 @@
 import prisma from "../configs/database";
-import { IErrorResponse, IPost, PaginationArgs  } from "../types/interfaces";
+import { IPost, IResult, IPaginationArgs, IPaginationResult  } from "../types/interfaces";
 import { Author, Post } from "@prisma/client";
 import { paginate } from "../utils/pagination";
-import { prismaErrorHandler } from "../middlewares/errorHandler";
+import { prismaErrorHandler } from "../utils/error-handler";
 
 const ENTITY_NAME = 'Post';
-export const createPost = async (data: IPost ) : Promise<IErrorResponse | Post > => {
+export const createPost = async (data: IPost ) : Promise<IResult<IPost>> => {
   const { title, content, author } = data;
   const post = await prisma.post.create({
     data: {
@@ -20,34 +20,61 @@ export const createPost = async (data: IPost ) : Promise<IErrorResponse | Post >
     }
   });
 
-  return post;
+  return {
+    success: true,
+    data: post
+  }
 }
 
-export const getPost = async (id: number) : Promise<IErrorResponse | Post> => {
+export const getPost = async (id: number) : Promise<IResult<IPost>> => {
   const post = await prisma.post.findUnique({ where: { id } });
   if (!post) {
     return {
+      success: false,
       error: 'Post not found'
     }
   }
 
-  return post;
+  return {
+    success: true,
+    data: post
+  }
 }
 
-export const getPosts = async (PaginationArgs: PaginationArgs) => {
-  return paginate<Post>({
-    ...PaginationArgs,
+export const getPosts = async (IPaginationArgs: IPaginationArgs): Promise<IResult<IPaginationResult<IPost>>> => {
+  const data = await paginate<Post>({
+    ...IPaginationArgs,
     count: async () => await prisma.post.count(),
     findMany: (args) => prisma.post.findMany({
       ...args,
       orderBy: { createdAt: 'desc' }
     })
   });
+
+  return {
+    success: true,
+    data
+  }
 }
 
-export const updatePost = async (id: number, data: IPost) : Promise<IErrorResponse | Post> => {
+export const updatePost = async (id: number, data: IPost) : Promise<IResult<IPost>> => {
   try {
     const { title, content, author } = data;
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      return {
+        success: false,
+        error: 'Post not found'
+      };
+    }
+
+    if (author?.id && post.authorId !== author.id) {
+      return {
+        success: false,
+        error: 'Not authorized'
+      };
+    }
+
     const updatedPost = await prisma.post.update({
       where: { id },
       data: {
@@ -57,25 +84,26 @@ export const updatePost = async (id: number, data: IPost) : Promise<IErrorRespon
       }
     });
 
-    if (author?.id && updatedPost.authorId !== author.id) {
-      return {
-        error: 'Not authorized'
-      };
-    }
-
-    return updatedPost;
-
+    return {
+      success: true,
+      data: updatedPost
+    };
   } catch (error: any) {
     return prismaErrorHandler(error, ENTITY_NAME);
   }
 }
 
 
-export const deletePost = async (id: number, author: Author) : Promise<IErrorResponse | string> => {
+export const deletePost = async (id: number, author: Author) : Promise<IResult<object>> => {
 try{
   await prisma.post.delete({ where: { id, authorId: author.id } });
 
-  return "Post deleted";
+  return {
+    success: true,
+    data: {
+      message: 'Post deleted successfully'
+    }
+  };
   } catch (error: any) {
     return prismaErrorHandler(error, ENTITY_NAME);
   }

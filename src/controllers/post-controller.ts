@@ -1,27 +1,26 @@
 import { FastifyRequest as Request, FastifyReply as Response } from 'fastify';
-import { AppError, isError, STATUS, successResponse }  from "../utils";
+import { AppError, STATUS, successResponse }  from "../utils";
 import * as postService from '../services/post-service';
-import { IErrorResponse, IPost } from "../types/interfaces";
-import { Author, Post } from "@prisma/client";
+import { IPost, IResult, IPaginationResult } from "../types/interfaces";
+import { Author } from "@prisma/client";
 import { getCache, setCache } from "../utils/cache";
-import { errorHandler } from "../middlewares/errorHandler";
+import { errorHandler } from "../utils/error-handler";
 
 const createPost = async (req: Request, res: Response) => {
   try {
     const { title, content } = req.body as IPost;
     const { author } = req;
 
-
-    const data : IErrorResponse | Post = await postService.createPost({
+    const result: IResult<IPost> = await postService.createPost({
       title,
       content,
       author
     });
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.BAD_REQUEST);
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.BAD_REQUEST);
     }
-    
-    return successResponse(res, STATUS.CREATED, data);
+
+    return successResponse(res, STATUS.CREATED, result.data as IPost);
   } catch (error : any) {
     return errorHandler(error, req, res);
   }
@@ -31,20 +30,20 @@ const getPost = async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
     const cachekey = `post-${id}`;
-    let data : IErrorResponse | Post  = await getCache(cachekey);
+    const data = await getCache(cachekey);
 
     if (data) {
-      return successResponse(res, STATUS.OK, data);
+      return successResponse(res, STATUS.OK, data as IPost);
     }
 
-    data = await postService.getPost(Number(id));
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.NOT_FOUND);
+    const result: IResult<IPost> = await postService.getPost(Number(id));
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.NOT_FOUND);
     }
 
-    await setCache(cachekey, data);
+    await setCache(cachekey,result.data, 2); // 2 hour
     
-    return successResponse(res, STATUS.OK, data);
+    return successResponse(res, STATUS.OK, result.data as IPost);
   } catch (error : any) {
     return errorHandler(error, req, res);
   }
@@ -64,19 +63,19 @@ const getPosts = async (req: Request, res: Response) => {
     take = take || 10;
 
     const cachekey = `posts-${skip}-${take}`;
-    let data = await getCache(cachekey);
+    const data = await getCache(cachekey);
     if (data) {
       return successResponse(res, STATUS.OK, data);
     }
 
-    data = await postService.getPosts({ skip, take });
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.BAD_REQUEST);
+    const result: IResult<IPaginationResult<IPost>> = await postService.getPosts({ skip, take });
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.BAD_REQUEST);
     }
 
-    await setCache(cachekey, data, 2); // 2 hours
+    await setCache(cachekey, result.data, 2); // 2 hours
 
-    return successResponse(res, STATUS.OK, data);
+    return successResponse(res, STATUS.OK, result.data as IPaginationResult<IPost>);
   } catch (error: any) {
     return errorHandler(error, req, res);
   }
@@ -89,16 +88,16 @@ const updatePost = async (req: Request, res: Response) => {
     const { author } = req;
 
 
-    const data : IErrorResponse | Post = await postService.updatePost(Number(id), {
+    const result: IResult<IPost> = await postService.updatePost(Number(id), {
       title,
       content,
       author
     });
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.BAD_REQUEST);
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.BAD_REQUEST);
     }
-    
-    return successResponse(res, STATUS.OK, data);
+
+    return successResponse(res, STATUS.OK, result.data as IPost);
   } catch (error : any) {
     return errorHandler(error, req, res);
   }
@@ -109,14 +108,12 @@ const deletePost = async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
     const { author } = req;
 
-    const data : IErrorResponse | string = await postService.deletePost(Number(id), author as Author);
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.BAD_REQUEST);
+    const result: IResult<object> = await postService.deletePost(Number(id), author as Author);
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.BAD_REQUEST);
     }
     
-    return successResponse(res, STATUS.NO_CONTENT, {
-      message: data
-    });
+    return successResponse(res, STATUS.NO_CONTENT, result.data as object);
   } catch (error : any) {
     return errorHandler(error, req, res);
   }

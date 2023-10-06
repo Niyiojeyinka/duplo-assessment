@@ -1,24 +1,24 @@
 import { FastifyRequest as Request, FastifyReply as Response } from 'fastify';
-import { AppError, isError, STATUS, successResponse }  from "../utils";
+import { AppError, STATUS, successResponse }  from "../utils";
 import * as authorService from '../services/author-service';
-import { IErrorResponse, ILoginResponse, IAuthor } from "../types/interfaces";
-import { errorHandler } from '../middlewares/errorHandler';
+import { IAuthor, IResult } from "../types/interfaces";
+import { errorHandler } from '../utils/error-handler';
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name } = req.body as IAuthor;
 
-    const data : IErrorResponse | IAuthor = await authorService.register({
-      email,
-      password,
-      name
+    const result : IResult<object> = await authorService.register({
+      email: email as string,
+      password: password as string,
+      name: name as string
     });
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.BAD_REQUEST);
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.BAD_REQUEST);
     }
     
-    return successResponse(res, STATUS.CREATED, data);
-  } catch (error : any) {
+    return successResponse(res, STATUS.CREATED, result.data as object);
+      } catch (error : any) {
     return errorHandler(error, req, res);
   }
 };
@@ -29,16 +29,15 @@ export const login = async (req: Request, res: Response) => {
       email: string;
       password: string;
     };
-
-    const data : IErrorResponse | ILoginResponse = await authorService.login(
+    const result : IResult<object> = await authorService.login(
       email,
       password
     );
-    if (isError(data)) {
-      throw new AppError(data.error, STATUS.BAD_REQUEST);
+    if (!result.success) {
+      throw new AppError(result.error as string, STATUS.BAD_REQUEST);
     }
 
-    return successResponse(res, STATUS.OK, data);
+    return successResponse(res, STATUS.OK, result.data as object);
   } catch (error : any) {
     return errorHandler(error, req, res);
   }
